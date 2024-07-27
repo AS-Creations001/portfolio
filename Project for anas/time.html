@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Entry</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="navbar"></div>
+    <div class="container">
+        <h1>Enter Time</h1>
+        <div id="timeForms" class="timeForms"></div>
+        <button onclick="submitTimes()">Submit</button>
+    </div>
+    <script>
+        function loadNavbar() {
+            fetch('navbar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('navbar').innerHTML = data;
+                });
+        }
+
+        loadNavbar();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const names = JSON.parse(localStorage.getItem('names')) || [];
+            const timeForms = document.getElementById('timeForms');
+
+            names.forEach(name => {
+                const form = document.createElement('div');
+                form.classList.add('timeForm');
+
+                const nameLabel = document.createElement('h2');
+                nameLabel.textContent = `Time entry for ${name}`;
+                form.appendChild(nameLabel);
+
+                const timeEntryContainer = document.createElement('div');
+                timeEntryContainer.classList.add('timeEntryContainer');
+
+                const inOutContainer = document.createElement('div');
+                inOutContainer.classList.add('inOutContainer');
+
+                const inLabel = document.createElement('label');
+                inLabel.textContent = 'In Time:';
+                inOutContainer.appendChild(inLabel);
+
+                const inTime = document.createElement('input');
+                inTime.type = 'time';
+                inTime.step = 60; // Allows minutes input
+                inTime.required = true;
+                inTime.classList.add('inTime');
+                inOutContainer.appendChild(inTime);
+
+                const inPeriod = document.createElement('select');
+                inPeriod.required = true;
+                inPeriod.classList.add('inPeriod');
+                inPeriod.innerHTML = `
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                `;
+                inOutContainer.appendChild(inPeriod);
+
+                const outLabel = document.createElement('label');
+                outLabel.textContent = 'Out Time:';
+                inOutContainer.appendChild(outLabel);
+
+                const outTime = document.createElement('input');
+                outTime.type = 'time';
+                outTime.step = 60; // Allows minutes input
+                outTime.required = true;
+                outTime.classList.add('outTime');
+                inOutContainer.appendChild(outTime);
+
+                const outPeriod = document.createElement('select');
+                outPeriod.required = true;
+                outPeriod.classList.add('outPeriod');
+                outPeriod.innerHTML = `
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                `;
+                inOutContainer.appendChild(outPeriod);
+
+                const absentButton = document.createElement('button');
+                absentButton.textContent = 'Absent';
+                absentButton.type = 'button';
+                absentButton.classList.add('absentButton');
+                absentButton.onclick = () => {
+                    inTime.disabled = !inTime.disabled;
+                    inPeriod.disabled = !inPeriod.disabled;
+                    outTime.disabled = !outTime.disabled;
+                    outPeriod.disabled = !outPeriod.disabled;
+                    form.classList.toggle('absent');
+                };
+                form.appendChild(absentButton);
+
+                timeEntryContainer.appendChild(inOutContainer);
+                form.appendChild(timeEntryContainer);
+
+                timeForms.appendChild(form);
+            });
+        });
+
+        function submitTimes() {
+            const timeForms = document.querySelectorAll('.timeForm');
+            const timeData = JSON.parse(localStorage.getItem('timeData')) || {};
+
+            timeForms.forEach(form => {
+                const name = form.querySelector('h2').textContent.replace('Time entry for ', '');
+                const inTime = form.querySelector('.inTime').value;
+                const inPeriod = form.querySelector('.inPeriod').value;
+                const outTime = form.querySelector('.outTime').value;
+                const outPeriod = form.querySelector('.outPeriod').value;
+
+                const date = new Date().toISOString().split('T')[0];
+
+                if (!timeData[date]) {
+                    timeData[date] = {};
+                }
+
+                timeData[date][name] = form.classList.contains('absent') ? 'absent' : 'present';
+            });
+
+            localStorage.setItem('timeData', JSON.stringify(timeData));
+            window.location.href = 'amount.html'; // Redirect to the amount entry page
+        }
+    </script>
+</body>
+</html>
